@@ -133,3 +133,11 @@ table thead tr th:first-child, table tbody tr td:first-child, table thead tr th:
 td img{
     width:36px;
 }
+
+table tbody tr:nth-of-type(odd) {
+    background: aliceblue;
+}
+
+table tbody tr:nth-of-type(even) {
+    background: #FFF;
+}

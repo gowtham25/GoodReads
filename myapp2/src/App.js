@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import BookList from './bookList.js';
 import Pagination from "react-js-pagination";
 import './App.css';
-var proxify = require('proxify-url');
+var convert = require('xml-js');
 
 class App extends Component {
 	constructor(){
@@ -19,17 +19,21 @@ class App extends Component {
 		let searchString = document.getElementById('searchByTitle').value;
 		if(searchString !== ""){
 			this.setState({activePage: page, runAPICall:true});
-			let proxyUrl = proxify(`https://www.goodreads.com/search/index.xml?key=zLYQreFCS11ZUypD1QGhCA&q=${searchString}&page=${page}`, { inputFormat: 'xml' });
-			fetch(proxyUrl)
-			.then(response => response.json())
-			.then(data => 
+			let proxyurl1 = "https://cors-anywhere.herokuapp.com/",
+				proxyUrl = `https://www.goodreads.com/search/index.xml?key=zLYQreFCS11ZUypD1QGhCA&q=${searchString}&page=${page}`,
+				dataAsJson = {};
+			fetch(proxyurl1 + proxyUrl)
+			.then(response => response.text())
+			.then(str => {
+				dataAsJson = JSON.parse(convert.xml2json(str, {compact: true, spaces: 4}));
+			}).then(() => {
 				this.setState({
-					bookList: data.query.results.GoodreadsResponse.search.results.work,
-					totalResult: data.query.results.GoodreadsResponse.search['total-results'],
+					bookList: dataAsJson.GoodreadsResponse.search.results.work,
+					totalResult: parseInt(dataAsJson.GoodreadsResponse.search['total-results']._text),
 					nextPagination: true,
 					runAPICall: false
 				})
-			)
+			});
 		}else{
 			alert("Please enter some thing to Search!");
 		}
@@ -56,7 +60,7 @@ class App extends Component {
 				<table>
 					<thead>
 						<tr>
-							<th>Book Front</th>
+							<th>Book Cover</th>
 							<th>Author</th>
 							<th>Title</th>
 							<th>Rating</th>
@@ -74,7 +78,7 @@ class App extends Component {
 					this.state.bookList.length === 0 ? 
 						<span className="no-result">No Result to show</span> : 
 						this.state.runAPICall ? 
-							<span className='wait'>Please Wait.....</span> :
+							<span className='wait'>Loading... Please Wait.....</span> :
 							<Pagination
 								activePage={this.state.activePage}
 								itemsCountPerPage={20}
